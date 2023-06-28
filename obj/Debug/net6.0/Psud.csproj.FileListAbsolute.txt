@@ -1,0 +1,15 @@
+C:\Users\Michi\OneDrive\Desktop\Psud\bin\Debug\net6.0\Psud.exe
+C:\Users\Michi\OneDrive\Desktop\Psud\bin\Debug\net6.0\Psud.deps.json
+C:\Users\Michi\OneDrive\Desktop\Psud\bin\Debug\net6.0\Psud.runtimeconfig.json
+C:\Users\Michi\OneDrive\Desktop\Psud\bin\Debug\net6.0\Psud.dll
+C:\Users\Michi\OneDrive\Desktop\Psud\bin\Debug\net6.0\Psud.pdb
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.csproj.AssemblyReference.cache
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.AssemblyInfoInputs.cache
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.AssemblyInfo.cs
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.csproj.CoreCompileInputs.cache
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.dll
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\refint\Psud.dll
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.pdb
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\Psud.genruntimeconfig.cache
+C:\Users\Michi\OneDrive\Desktop\Psud\obj\Debug\net6.0\ref\Psud.dll
