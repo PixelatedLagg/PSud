@@ -18,6 +18,27 @@ namespace Psud
             }
         }
 
+        public static IEnumerable<(sbyte, sbyte)> IterateBoxIgnore(sbyte brx, sbyte bry, sbyte tlx, sbyte tly, sbyte x, sbyte y)
+        {
+            for (sbyte i = tlx; i <= brx; i++)
+            {
+                for (sbyte j = tly; j <= bry; j++)
+                {
+                    if (i != x || j != y)
+                    {
+                        yield return (i, j);
+                    }
+                }
+            }
+        }
+
+        public static (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) GetBox(sbyte x, sbyte y)
+        {
+            sbyte tlx = (sbyte)(Math.Floor((decimal)x / 3) * 3);
+            sbyte tly = (sbyte)(Math.Floor((decimal)y / 3) * 3);
+            return ((sbyte)(tlx + 2), (sbyte)(tly + 2), tlx, tly);
+        }
+
         public static void CandidatesDebug(List<sbyte>[,] candidates, sbyte[,] board)
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -147,7 +168,7 @@ namespace Psud
             }
         }
 
-        public static void CandidatesHighlight(List<sbyte>[,] candidates, sbyte[,] board, (int x, int y)[] highlight)
+        public static void CandidatesHighlight(List<sbyte>[,] candidates, sbyte[,] board, (sbyte x, sbyte y)[] highlight)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(" y   0   1   2   3   4   5   6   7   8");
