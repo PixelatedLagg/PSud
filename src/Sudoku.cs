@@ -59,7 +59,7 @@ namespace Psud
                                 {
                                     x = square.x;
                                 }
-                                else if (x != square.x)
+                                if (x != square.x)
                                 {
                                     goto ColumnPointing;
                                 }
@@ -79,7 +79,7 @@ namespace Psud
                         }
                         if (log.Length != 0)
                         {
-                            candidateLog.Add($"Row pointing: {number} - {log.Remove(log.Length - 2, 2).ToString()}");
+                            candidateLog.Add($"Row pointing: {number}, Row {x} - {log.Remove(log.Length - 2, 2).ToString()}");
                             log.Clear();
                         }
                         ColumnPointing:
@@ -90,9 +90,9 @@ namespace Psud
                             {
                                 if (y == -1)
                                 {
-                                    y = square.x;
+                                    y = square.y;
                                 }
-                                else if (y != square.y)
+                                if (y != square.y)
                                 {
                                     goto RowClaiming;
                                 }
@@ -112,142 +112,112 @@ namespace Psud
                         }
                         if (log.Length != 0)
                         {
-                            candidateLog.Add($"Column pointing: {number} - {log.Remove(log.Length - 2, 2).ToString()}");
+                            candidateLog.Add($"Column pointing: {number}, Column {y} - {log.Remove(log.Length - 2, 2).ToString()}");
                             log.Clear();
                         }
-                        RowClaiming:
-                            continue;
                     }
                 }
-            }
-
-            /*for (sbyte x = 0; x < 9; x++)
-            {
+                RowClaiming:
+                for (sbyte x = 0; x < 9; x++)
+                {
+                    (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) box = (-1, -1, -1, -1);
+                    for (sbyte y = 0; y < 9; y++)
+                    {
+                        if (Candidates[x, y].Contains(number))
+                        {
+                            if (box == (-1, -1, -1, -1))
+                            {
+                                box = Utilities.GetBox(x, y);
+                            }
+                            if (box != Utilities.GetBox(x, y))
+                            {
+                                goto ColumnClaiming;
+                            }
+                        }
+                    }
+                    if (box == (-1, -1, -1, -1))
+                    {
+                        goto ColumnClaiming;
+                    }
+                    foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(box.brx, box.bry, box.tlx, box.tly))
+                    {
+                        if (x != square.x && Candidates[square.x, square.y].Contains(number))
+                        {
+                            log.Append($"({square.x}, {square.y}), ");
+                            Candidates[square.x, square.y].Remove(number);
+                        }
+                    }
+                    if (log.Length != 0)
+                    {
+                        candidateLog.Add($"Row claiming: {number}, Row {x} - {log.Remove(log.Length - 2, 2).ToString()}");
+                        log.Clear();
+                    }
+                }
+                ColumnClaiming:
                 for (sbyte y = 0; y < 9; y++)
                 {
-                    (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) box = Utilities.GetBox(x, y);
-                    foreach (sbyte number in Candidates[x, y].ToArray())
+                    (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) box = (-1, -1, -1, -1);
+                    for (sbyte x = 0; x < 9; x++)
                     {
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBoxIgnore(box.brx, box.bry, box.tlx, box.tly, x, y)) //checking row
+                        if (Candidates[x, y].Contains(number))
                         {
-                            if (Candidates[square.x, square.y].Contains(number) && square.x != x)
+                            if (box == (-1, -1, -1, -1))
                             {
-                                goto pointColumn;
+                                box = Utilities.GetBox(x, y);
+                            }
+                            if (box != Utilities.GetBox(x, y))
+                            {
+                                goto NakedSubsetBox;
                             }
                         }
-                        for (sbyte horiz = 0; horiz < 9; horiz++)
+                    }
+                    if (box == (-1, -1, -1, -1))
+                    {
+                        goto NakedSubsetBox;
+                    }
+                    foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(box.brx, box.bry, box.tlx, box.tly))
+                    {
+                        if (y != square.y && Candidates[square.x, square.y].Contains(number))
                         {
-                            if (Candidates[x, horiz].Contains(number) && !Utilities.InsideBox(box.brx, box.bry, box.tlx, box.tly, x, y))
+                            log.Append($"({square.x}, {square.y}), ");
+                            Candidates[square.x, square.y].Remove(number);
+                        }
+                    }
+                    box = (-1, -1, -1, -1);
+                    if (log.Length != 0)
+                    {
+                        candidateLog.Add($"Column claiming: {number}, Column {y} - {log.Remove(log.Length - 2, 2).ToString()}");
+                        log.Clear();
+                    }
+                }
+                NakedSubsetBox:
+                for (sbyte i = 0; i < 3; i++)
+                {
+                    for (sbyte j = 0; j < 3; j++)
+                    {
+                        List<sbyte> counts = new List<sbyte>();
+                        List<List<sbyte>> subsets = new List<List<sbyte>>();
+                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
+                        {
+                            if (Candidates[square.x, square.y].Count == 2)
                             {
-                                log.Append($"({x}, {horiz}), ");
-                                Candidates[x, horiz].Remove(number);
-                            }
-                        }
-                        if (log.Length != 0)
-                        {
-                            candidateLog.Add($"Row pointing: {number} - {log.Remove(log.Length - 2, 2).ToString()}");
-                            log.Clear();
-                        }
-                        pointColumn:
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBoxIgnore(box.brx, box.bry, box.tlx, box.tly, x, y)) //checking column
-                        {
-                            if (Candidates[square.x, square.y].Contains(number) && square.y != y)
-                            {
-                                goto claimRow;
-                            }
-                        }
-                        for (sbyte vert = 0; vert < 9; vert++)
-                        {
-                            if (Candidates[vert, y].Contains(number) && !Utilities.InsideBox(box.brx, box.bry, box.tlx, box.tly, x, y))
-                            {
-                                log.Append($"({vert}, {y}), ");
-                                Candidates[vert, y].Remove(number);
-                            }
-                        }
-                        if (log.Length != 0)
-                        {
-                            candidateLog.Add($"Column pointing: {number} - {log.Remove(log.Length - 2, 2).ToString()}");
-                            log.Clear();
-                        }
-                        claimRow:
-                        (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) rowClaim = (-1, -1, -1, -1);
-                        for (sbyte horiz = 0; horiz < 9; horiz++)
-                        {
-                            if (Candidates[x, horiz].Contains(number))
-                            {
-                                if (rowClaim == (-1, -1, -1, -1))
+                                for (sbyte index = 0; index < subsets.Count; index++)
                                 {
-                                    rowClaim = Utilities.GetBox(x, horiz);
-                                }
-                                else
-                                {
-                                    if (rowClaim != Utilities.GetBox(x, horiz))
+                                    if (Enumerable.SequenceEqual<sbyte>(subsets[index], Candidates[square.x, square.y])) //already a subset
                                     {
-                                        goto claimColumn;
+                                        counts[index]++;
                                     }
                                 }
                             }
-                        }
-                        if (rowClaim == (-1, -1, -1, -1))
-                        {
-                            goto claimColumn;
-                        }
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(rowClaim.brx, rowClaim.bry, rowClaim.tlx, rowClaim.tly))
-                        {
-                            if (x != square.x && Candidates[square.x, square.y].Contains(number))
+                            else if (Candidates[square.x, square.y].Count == 2)
                             {
-                                log.Append($"({square.x}, {square.y}), ");
-                                Candidates[square.x, square.y].Remove(number);
+
                             }
-                        }
-                        rowClaim = (-1, -1, -1, -1);
-                        if (log.Length != 0)
-                        {
-                            candidateLog.Add($"Row claiming: {number} - {log.Remove(log.Length - 2, 2).ToString()}");
-                            log.Clear();
-                        }
-                        claimColumn:
-                        (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) columnClaim = (-1, -1, -1, -1);
-                        for (sbyte vert = 0; vert < 9; vert++)
-                        {
-                            if (Candidates[vert, y].Contains(number))
-                            {
-                                if (columnClaim == (-1, -1, -1, -1))
-                                {
-                                    columnClaim = Utilities.GetBox(vert, y);
-                                }
-                                else
-                                {
-                                    if (columnClaim != Utilities.GetBox(vert, y))
-                                    {
-                                        goto nakedSubsetBox;
-                                    }
-                                }
-                            }
-                        }
-                        if (columnClaim == (-1, -1, -1, -1))
-                        {
-                            goto nakedSubsetBox;
-                        }
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(columnClaim.brx, columnClaim.bry, columnClaim.tlx, columnClaim.tly))
-                        {
-                            if (y != square.y && Candidates[square.x, square.y].Contains(number))
-                            {
-                                log.Append($"({square.x}, {square.y}), ");
-                                Candidates[square.x, square.y].Remove(number);
-                            }
-                        }
-                        columnClaim = (-1, -1, -1, -1);
-                        if (log.Length != 0)
-                        {
-                            candidateLog.Add($"Column claiming: {number} - {log.Remove(log.Length - 2, 2).ToString()}");
-                            log.Clear();
                         }
                     }
                 }
+                    continue;
             }
-            nakedSubsetBox:*/
-
 
             //beginner
             //hidden singles
