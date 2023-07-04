@@ -195,28 +195,14 @@ namespace Psud
                 {
                     for (sbyte j = 0; j < 3; j++)
                     {
-                        List<sbyte> counts = new List<sbyte>();
-                        List<List<sbyte>> subsets = new List<List<sbyte>>();
+                        List<((sbyte x, sbyte y) position, List<sbyte>, sbyte count)> subsets = new List<((sbyte x, sbyte y) position, List<sbyte>, sbyte count)>(); //info of every possible subset
                         foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
                         {
-                            if (Candidates[square.x, square.y].Count == 2)
-                            {
-                                for (sbyte index = 0; index < subsets.Count; index++)
-                                {
-                                    if (Enumerable.SequenceEqual<sbyte>(subsets[index], Candidates[square.x, square.y])) //already a subset
-                                    {
-                                        counts[index]++;
-                                    }
-                                }
-                            }
-                            else if (Candidates[square.x, square.y].Count == 2)
-                            {
-
-                            }
+                            //check if matches any lists, then run appropriate logic
                         }
                     }
                 }
-                    continue;
+                continue;
             }
 
             //beginner
