@@ -4,7 +4,7 @@ class Program
 {
     public static void Main()
     {
-        string input = File.ReadAllText("input.txt");
+        string input = File.ReadLines("input.txt").First();
         Sudoku sud = Parser.PSN(input);
         DateTime before = DateTime.Now;
         sud.Solve();

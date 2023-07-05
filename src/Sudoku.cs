@@ -167,13 +167,13 @@ namespace Psud
                             }
                             if (box != Utilities.GetBox(x, y))
                             {
-                                goto NakedSubsetBox;
+                                goto EndOfLoop;
                             }
                         }
                     }
                     if (box == (-1, -1, -1, -1))
                     {
-                        goto NakedSubsetBox;
+                        goto EndOfLoop;
                     }
                     foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(box.brx, box.bry, box.tlx, box.tly))
                     {
@@ -190,20 +190,111 @@ namespace Psud
                         log.Clear();
                     }
                 }
-                NakedSubsetBox:
-                for (sbyte i = 0; i < 3; i++)
+                EndOfLoop:
+                continue;
+            }
+            for (sbyte i = 0; i < 3; i++)
+            {
+                for (sbyte j = 0; j < 3; j++)
                 {
-                    for (sbyte j = 0; j < 3; j++)
+                    List<NakedSubset> subsets = new List<NakedSubset>();
+                    subsets.Add(new NakedSubset(Candidates[(sbyte)(i * 3), (sbyte)(j * 3)], 1));
+                    foreach ((sbyte x, sbyte y) square in Utilities.IterateBoxIgnore((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2), (sbyte)(i * 3), (sbyte)(j * 3)))
                     {
-                        List<((sbyte x, sbyte y) position, List<sbyte>, sbyte count)> subsets = new List<((sbyte x, sbyte y) position, List<sbyte>, sbyte count)>(); //info of every possible subset
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
+                        for (int index = 0; index < subsets.Count; index++)
                         {
-                            //check if matches any lists, then run appropriate logic
+                            if (Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
+                            {
+                                subsets[index].Count++;
+                            }
+                            else
+                            {
+                                subsets.Add(new NakedSubset(Candidates[square.x, square.y], 1));
+                            }
+                        }
+                    }
+                    for (int index = 0; index < subsets.Count; index++)
+                    {
+                        if (subsets[index].Count != subsets[index].Candidates.Count)
+                        {
+                            subsets.RemoveAt(index);
+                        }
+                    }
+                    for (int index = 0; index < subsets.Count; index++)
+                    {
+                        foreach (sbyte candidate in subsets[index].Candidates)
+                        {
+                            foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
+                            {
+                                if (Candidates[square.x, square.y].Contains(candidate))
+                                {
+                                    if (Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
+                                    {
+                                        continue;
+                                    }
+                                    log.Append($"{candidate} - ({square.x}, {square.y}), ");
+                                    Candidates[square.x, square.y].Remove(candidate);
+                                }
+                            }
+                        }
+                    }
+                    if (log.Length != 0)
+                    {
+                        candidateLog.Add($"Naked subset(s) in box: ({i}, {j}) - {log.Remove(log.Length - 2, 2).ToString()}");
+                        log.Clear();
+                    }
+                }
+            }
+            for (sbyte x = 0; x < 9; x++)
+            {
+                List<NakedSubset> subsets = new List<NakedSubset>();
+                subsets.Add(new NakedSubset(Candidates[x, 0], 1));
+                for (sbyte y = 1; y < 9; y++)
+                {
+                    for (int index = 0; index < subsets.Count; index++)
+                    {
+                        if (Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
+                        {
+                            subsets[index].Count++;
+                            goto Continue;
+                        }
+                    }
+                    subsets.Add(new NakedSubset(Candidates[x, y], 1));
+                    Continue:
+                    continue;
+                }
+                for (int index = 0; index < subsets.Count; index++)
+                {
+                    if (subsets[index].Count != subsets[index].Candidates.Count)
+                    {
+                        subsets.RemoveAt(index);
+                    }
+                }
+                for (int index = 0; index < subsets.Count; index++)
+                {
+                    foreach (sbyte candidate in subsets[index].Candidates)
+                    {
+                        for (sbyte y = 0; y < 9; y++)
+                        {
+                            if (Candidates[x, y].Contains(candidate))
+                            {
+                                if (Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
+                                {
+                                    continue;
+                                }
+                                log.Append($"{candidate} - ({x}, {y}), ");
+                                Candidates[x, y].Remove(candidate);
+                            }
                         }
                     }
                 }
-                continue;
+                if (log.Length != 0)
+                {
+                    candidateLog.Add($"Naked subset(s) in row: {x} - {log.Remove(log.Length - 2, 2).ToString()}");
+                    log.Clear();
+                }
             }
+
 
             //beginner
             //hidden singles
