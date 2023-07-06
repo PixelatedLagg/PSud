@@ -198,20 +198,31 @@ namespace Psud
                 for (sbyte j = 0; j < 3; j++)
                 {
                     List<NakedSubset> subsets = new List<NakedSubset>();
-                    subsets.Add(new NakedSubset(Candidates[(sbyte)(i * 3), (sbyte)(j * 3)], 1));
                     foreach ((sbyte x, sbyte y) square in Utilities.IterateBoxIgnore((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2), (sbyte)(i * 3), (sbyte)(j * 3)))
                     {
+                        if (subsets.Count == 0)
+                        {
+                            if (Candidates[square.x, square.y].Count != 0)
+                            {
+                                subsets.Add(new NakedSubset(Candidates[square.x, square.y], 1));
+                            }
+                            continue;
+                        }
+                        if (Candidates[square.x, square.y].Count == 0)
+                        {
+                            continue;
+                        }
                         for (int index = 0; index < subsets.Count; index++)
                         {
                             if (Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
                             {
                                 subsets[index].Count++;
-                            }
-                            else
-                            {
-                                subsets.Add(new NakedSubset(Candidates[square.x, square.y], 1));
+                                goto Continue;
                             }
                         }
+                        subsets.Add(new NakedSubset(Candidates[square.x, square.y], 1));
+                        Continue:
+                        continue;
                     }
                     for (int index = 0; index < subsets.Count; index++)
                     {
