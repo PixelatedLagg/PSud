@@ -193,6 +193,8 @@ namespace Psud
                 EndOfLoop:
                 continue;
             }
+
+            //naked subsets, this is the broken code:
             for (sbyte i = 0; i < 3; i++)
             {
                 for (sbyte j = 0; j < 3; j++)
@@ -228,23 +230,19 @@ namespace Psud
                     {
                         if (subsets[index].Count != subsets[index].Candidates.Count)
                         {
-                            subsets.RemoveAt(index);
+                            continue;
                         }
-                    }
-                    for (int index = 0; index < subsets.Count; index++)
-                    {
-                        foreach (sbyte candidate in subsets[index].Candidates)
+                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
                         {
-                            foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
+                            if (!Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
                             {
-                                if (Candidates[square.x, square.y].Contains(candidate))
+                                foreach (sbyte candidate in subsets[index].Candidates)
                                 {
-                                    if (Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
+                                    if (Candidates[square.x, square.y].Contains(candidate))
                                     {
-                                        continue;
+                                        log.Append($"{candidate} - ({square.x}, {square.y}), ");
+                                        Candidates[square.x, square.y].Remove(candidate);
                                     }
-                                    log.Append($"{candidate} - ({square.x}, {square.y}), ");
-                                    Candidates[square.x, square.y].Remove(candidate);
                                 }
                             }
                         }
