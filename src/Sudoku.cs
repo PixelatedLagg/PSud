@@ -254,45 +254,54 @@ namespace Psud
                     }
                 }
             }
+
+            
             for (sbyte x = 0; x < 9; x++)
             {
                 List<NakedSubset> subsets = new List<NakedSubset>();
-                subsets.Add(new NakedSubset(Candidates[x, 0], 1));
                 for (sbyte y = 1; y < 9; y++)
                 {
-                    for (int index = 0; index < subsets.Count; index++)
-                    {
-                        if (Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
+                    if (subsets.Count == 0)
                         {
-                            subsets[index].Count++;
-                            goto Continue;
+                            if (Candidates[x, y].Count != 0)
+                            {
+                                subsets.Add(new NakedSubset(Candidates[x, y], 1));
+                            }
+                            continue;
                         }
-                    }
-                    subsets.Add(new NakedSubset(Candidates[x, y], 1));
-                    Continue:
-                    continue;
+                        if (Candidates[x, y].Count == 0)
+                        {
+                            continue;
+                        }
+                        for (int index = 0; index < subsets.Count; index++)
+                        {
+                            if (Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
+                            {
+                                subsets[index].Count++;
+                                goto Continue;
+                            }
+                        }
+                        subsets.Add(new NakedSubset(Candidates[x, y], 1));
+                        Continue:
+                        continue;
                 }
                 for (int index = 0; index < subsets.Count; index++)
                 {
                     if (subsets[index].Count != subsets[index].Candidates.Count)
                     {
-                        subsets.RemoveAt(index);
+                        continue;
                     }
-                }
-                for (int index = 0; index < subsets.Count; index++)
-                {
-                    foreach (sbyte candidate in subsets[index].Candidates)
+                    for (sbyte y = 0; y < 9; y++)
                     {
-                        for (sbyte y = 0; y < 9; y++)
+                        if (!Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
                         {
-                            if (Candidates[x, y].Contains(candidate))
+                            foreach (sbyte candidate in subsets[index].Candidates)
                             {
-                                if (Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
+                                if (Candidates[x, y].Contains(candidate))
                                 {
-                                    continue;
+                                    log.Append($"{candidate} - ({x}, {y}), ");
+                                    Candidates[x, y].Remove(candidate);
                                 }
-                                log.Append($"{candidate} - ({x}, {y}), ");
-                                Candidates[x, y].Remove(candidate);
                             }
                         }
                     }
