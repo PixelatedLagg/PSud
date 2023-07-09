@@ -168,6 +168,53 @@ namespace Psud
             }
         }
 
+        public static string ToDirections(sbyte x, sbyte y)
+        {
+            string result = "";
+            sbyte diffX, diffY;
+            if (x <= 2)
+            {
+                result += 't';
+                diffX = 0;
+            }
+            else if (x <= 5)
+            {
+                result += 'm';
+                diffX = 3;
+            }
+            else
+            {
+                result += 'b';
+                diffX = 6;
+            }
+            if (y <= 2)
+            {
+                result += 'l';
+                diffY = 0;
+            }
+            else if (y <= 5)
+            {
+                result += 'm';
+                diffY = 3;
+            }
+            else
+            {
+                result += 'r';
+                diffY = 6;
+            }
+            result += (x - diffX) switch {
+                0 => " t",
+                1 => " m",
+                _ => " b"
+            };
+            result += (y - diffY) switch {
+                0 => 'l',
+                1 => 'm',
+                _ => 'r'
+            };
+            return result;
+        }
+
         public static void CandidatesHighlight(List<sbyte>[,] candidates, sbyte[,] board, (sbyte x, sbyte y)[] highlight)
         {
             Console.ForegroundColor = ConsoleColor.Red;
