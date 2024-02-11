@@ -4,8 +4,7 @@ class Program
 {
     public static void Main()
     {
-        Console.WriteLine(Utilities.ToDirections(4, 0));
-        /*string input = File.ReadLines("input.txt").First();
+        string input = File.ReadLines("input.txt").First();
         Sudoku sud = Parser.PSN(input);
         DateTime before = DateTime.Now;
         sud.Solve();
@@ -37,6 +36,6 @@ class Program
                 }
             }
             Console.Clear();
-        }*/
+        }
     }
 }

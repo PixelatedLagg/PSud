@@ -2,7 +2,6 @@ namespace Psud
 {
     public static class Calculate
     {
-        
         public static List<sbyte>[,] Candidates(sbyte[,] board)
         {
             List<sbyte>[,] candidates = new List<sbyte>[9, 9];

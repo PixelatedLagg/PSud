@@ -32,6 +32,31 @@ namespace Psud
             }
         }
 
+        public static IEnumerable<(sbyte, sbyte)> IterateBox(sbyte x, sbyte y)
+        {
+            for (sbyte i = x; i <= x * 3 + 2; i++)
+            {
+                for (sbyte j = y; j <= y * 3 + 2; j++)
+                {
+                    yield return (i, j);
+                }
+            }
+        }
+
+        public static IEnumerable<(sbyte, sbyte)> IterateBoxIgnore(sbyte x, sbyte y, sbyte px, sbyte py)
+        {
+            for (sbyte i = x; i <= x * 3 + 2; i++)
+            {
+                for (sbyte j = y; j <= y * 3 + 2; j++)
+                {
+                    if (i != px && j != py) //disregard (px, py)
+                    {
+                        yield return (i, j);
+                    }
+                }
+            }
+        }
+
         public static (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) GetBox(sbyte x, sbyte y)
         {
             sbyte tlx = (sbyte)(Math.Floor((decimal)x / 3) * 3);

@@ -6,7 +6,8 @@ namespace Psud
     {
         public sbyte[,] Board;
         public List<sbyte>[,] Candidates = new List<sbyte>[9, 9];
-        public List<Step> Steps = new List<Step>();
+        public List<Step> Steps = new();
+        private readonly List<string> StepCandidateLog = new();
 
         public Sudoku(sbyte[,] board)
         {
@@ -35,338 +36,165 @@ namespace Psud
 
         public void Solve()
         {
-            //beginner
-            //pointing
-            //claiming
-            refresh:
+            StepCandidateLog.Clear(); //starting new step
             Candidates = Calculate.Candidates(Board);
-            List<string> candidateLog = new List<string>();
-            StringBuilder log = new StringBuilder();
-
-
-            for (sbyte number = 1; number <= 9; number++)
+            bool naked = NakedSingles();
+            bool hidden = HiddenSingles();
+            if (naked || hidden) //solve again if naked single is found
             {
-                for (sbyte i = 0; i < 3; i++)
+                Solve();
+            }
+        }
+    
+        private bool NakedSingles()
+        {
+            for (sbyte i = 0; i < 9; i++)
+            {
+                for (sbyte j = 0; j < 9; j++)
+                {
+                    if (Candidates[i, j].Count == 1)
+                    {
+                        Steps.Add(new Step(Candidates, Board, $"Naked Single: ({i}, {j})", new (sbyte, sbyte)[] { (i, j) }, StepCandidateLog));
+                        Board[i, j] = Candidates[i, j][0];
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool HiddenSingles()
+        {
+            for (sbyte n = 1; n < 10; n++) //iterate over numbers 1-9
+            {
+                for (sbyte i = 0; i < 3; i++) //check by box
                 {
                     for (sbyte j = 0; j < 3; j++)
                     {
-                        sbyte x = -1;
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2))) //checking row
+                        bool alreadyNumber = false;
+                        foreach ((sbyte x, sbyte y) in Utilities.IterateBox(i, j))
                         {
-                            if (Candidates[square.x, square.y].Contains(number))
+                            if (Board[x, y] == n)
                             {
-                                if (x == -1)
-                                {
-                                    x = square.x;
-                                }
-                                if (x != square.x)
-                                {
-                                    goto ColumnPointing;
-                                }
+                                alreadyNumber = true;
+                                break;
                             }
                         }
-                        if (x == -1)
+                        if (alreadyNumber) //if number is already in box, hidden single is impossible
                         {
-                            goto ColumnPointing;
+                            break;
                         }
-                        for (sbyte row = 0; row < 9; row++)
+                        bool found = false, hidden = true;
+                        sbyte possibleX = 0, possibleY = 0;
+                        foreach ((sbyte x, sbyte y) in Utilities.IterateBox(i, j)) //get squares in box
                         {
-                            if (Candidates[x, row].Contains(number) && !Utilities.InsideBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2), x, row))
+                            if (Candidates[x, y].Contains(n))
                             {
-                                log.Append($"({x}, {row}), ");
-                                Candidates[x, row].Remove(number);
-                            }
-                        }
-                        if (log.Length != 0)
-                        {
-                            candidateLog.Add($"Row pointing: {number}, Row {x} - {log.Remove(log.Length - 2, 2).ToString()}");
-                            log.Clear();
-                        }
-                        ColumnPointing:
-                        sbyte y = -1;
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2))) //checking column
-                        {
-                            if (Candidates[square.x, square.y].Contains(number))
-                            {
-                                if (y == -1)
+                                if (found)
                                 {
-                                    y = square.y;
+                                    hidden = false;
+                                    break; //go to next box, same number twice
                                 }
-                                if (y != square.y)
+                                else //first time number is found, could be hidden
                                 {
-                                    goto RowClaiming;
+                                    found = true;
+                                    possibleX = x;
+                                    possibleY = y;
                                 }
                             }
                         }
-                        if (y == -1)
+                        if (hidden)
                         {
-                            goto RowClaiming;
-                        }
-                        for (sbyte column = 0; column < 9; column++)
-                        {
-                            if (Candidates[column, y].Contains(number) && !Utilities.InsideBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2), column, y))
-                            {
-                                log.Append($"({column}, {y}), ");
-                                Candidates[column, y].Remove(number);
-                            }
-                        }
-                        if (log.Length != 0)
-                        {
-                            candidateLog.Add($"Column pointing: {number}, Column {y} - {log.Remove(log.Length - 2, 2).ToString()}");
-                            log.Clear();
+                            Steps.Add(new Step(Candidates, Board, $"Hidden Single in ({i}, {j}) Box: ({possibleX}, {possibleY})", new (sbyte, sbyte)[] { (possibleX, possibleY) }, StepCandidateLog));
+                            Board[possibleX, possibleY] = n;
+                            return true;
                         }
                     }
                 }
-                RowClaiming:
-                for (sbyte x = 0; x < 9; x++)
+                for (sbyte i = 0; i < 9; i++) //check by column
                 {
-                    (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) box = (-1, -1, -1, -1);
-                    for (sbyte y = 0; y < 9; y++)
+                    bool alreadyNumber = false;
+                    for (sbyte j = 0; j < 9; j++)
                     {
-                        if (Candidates[x, y].Contains(number))
+                        if (Board[i, j] == n)
                         {
-                            if (box == (-1, -1, -1, -1))
+                            alreadyNumber = true;
+                            break;
+                        }
+                    }
+                    if (alreadyNumber) //if number is already in column, hidden single is impossible
+                    {
+                        break;
+                    }
+                    bool found = false, hidden = true;
+                    sbyte possibleX = 0, possibleY = 0;
+                    for (sbyte j = 0; j < 9; j++)
+                    {
+                        if (Candidates[i, j].Contains(n))
+                        {
+                            if (found)
                             {
-                                box = Utilities.GetBox(x, y);
+                                hidden = false;
+                                break; //go to next column, same number twice
                             }
-                            if (box != Utilities.GetBox(x, y))
+                            else //first time number is found, could be hidden
                             {
-                                goto ColumnClaiming;
+                                found = true;
+                                possibleX = i;
+                                possibleY = j;
                             }
                         }
                     }
-                    if (box == (-1, -1, -1, -1))
+                    if (hidden)
                     {
-                        goto ColumnClaiming;
-                    }
-                    foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(box.brx, box.bry, box.tlx, box.tly))
-                    {
-                        if (x != square.x && Candidates[square.x, square.y].Contains(number))
-                        {
-                            log.Append($"({square.x}, {square.y}), ");
-                            Candidates[square.x, square.y].Remove(number);
-                        }
-                    }
-                    if (log.Length != 0)
-                    {
-                        candidateLog.Add($"Row claiming: {number}, Row {x} - {log.Remove(log.Length - 2, 2).ToString()}");
-                        log.Clear();
+                        Steps.Add(new Step(Candidates, Board, $"Hidden Single in ({i}) Column: ({possibleX}, {possibleY})", new (sbyte, sbyte)[] { (possibleX, possibleY) }, StepCandidateLog));
+                        Board[possibleX, possibleY] = n;
+                        return true;
                     }
                 }
-                ColumnClaiming:
-                for (sbyte y = 0; y < 9; y++)
+                for (sbyte j = 0; j < 9; j++) //check by row
                 {
-                    (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) box = (-1, -1, -1, -1);
-                    for (sbyte x = 0; x < 9; x++)
+                    bool alreadyNumber = false;
+                    for (sbyte i = 0; i < 9; i++)
                     {
-                        if (Candidates[x, y].Contains(number))
+                        if (Board[i, j] == n)
                         {
-                            if (box == (-1, -1, -1, -1))
+                            alreadyNumber = true;
+                            break;
+                        }
+                    }
+                    if (alreadyNumber) //if number is already in row, hidden single is impossible
+                    {
+                        break;
+                    }
+                    bool found = false, hidden = true;
+                    sbyte possibleX = 0, possibleY = 0;
+                    for (sbyte i = 0; i < 9; i++)
+                    {
+                        if (Candidates[i, j].Contains(n))
+                        {
+                            if (found)
                             {
-                                box = Utilities.GetBox(x, y);
+                                hidden = false;
+                                break; //go to next row, same number twice
                             }
-                            if (box != Utilities.GetBox(x, y))
+                            else //first time number is found, could be hidden
                             {
-                                goto EndOfLoop;
-                            }
-                        }
-                    }
-                    if (box == (-1, -1, -1, -1))
-                    {
-                        goto EndOfLoop;
-                    }
-                    foreach ((sbyte x, sbyte y) square in Utilities.IterateBox(box.brx, box.bry, box.tlx, box.tly))
-                    {
-                        if (y != square.y && Candidates[square.x, square.y].Contains(number))
-                        {
-                            log.Append($"({square.x}, {square.y}), ");
-                            Candidates[square.x, square.y].Remove(number);
-                        }
-                    }
-                    box = (-1, -1, -1, -1);
-                    if (log.Length != 0)
-                    {
-                        candidateLog.Add($"Column claiming: {number}, Column {y} - {log.Remove(log.Length - 2, 2).ToString()}");
-                        log.Clear();
-                    }
-                }
-                EndOfLoop:
-                continue;
-            }
-
-            //naked subsets, this is the broken code:
-            for (sbyte i = 0; i < 3; i++)
-            {
-                for (sbyte j = 0; j < 3; j++)
-                {
-                    List<NakedSubset> subsets = new List<NakedSubset>();
-                    foreach ((sbyte x, sbyte y) square in Utilities.IterateBoxIgnore((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2), (sbyte)(i * 3), (sbyte)(j * 3)))
-                    {
-                        if (subsets.Count == 0)
-                        {
-                            if (Candidates[square.x, square.y].Count != 0)
-                            {
-                                subsets.Add(new NakedSubset(Candidates[square.x, square.y], 1));
-                            }
-                            continue;
-                        }
-                        if (Candidates[square.x, square.y].Count == 0)
-                        {
-                            continue;
-                        }
-                        for (int index = 0; index < subsets.Count; index++)
-                        {
-                            if (Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
-                            {
-                                subsets[index].Count++;
-                                goto Continue;
-                            }
-                        }
-                        subsets.Add(new NakedSubset(Candidates[square.x, square.y], 1));
-                        Continue:
-                        continue;
-                    }
-                    for (int index = 0; index < subsets.Count; index++)
-                    {
-                        if (subsets[index].Count != subsets[index].Candidates.Count)
-                        {
-                            continue;
-                        }
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBox((sbyte)(i * 3), (sbyte)(j * 3), (sbyte)(i * 3 + 2), (sbyte)(j * 3 + 2)))
-                        {
-                            if (!Enumerable.SequenceEqual(Candidates[square.x, square.y], subsets[index].Candidates))
-                            {
-                                foreach (sbyte candidate in subsets[index].Candidates)
-                                {
-                                    if (Candidates[square.x, square.y].Contains(candidate))
-                                    {
-                                        log.Append($"{candidate} - ({square.x}, {square.y}), ");
-                                        Candidates[square.x, square.y].Remove(candidate);
-                                    }
-                                }
+                                found = true;
+                                possibleX = i;
+                                possibleY = j;
                             }
                         }
                     }
-                    if (log.Length != 0)
+                    if (hidden)
                     {
-                        candidateLog.Add($"Naked subset(s) in box: ({i}, {j}) - {log.Remove(log.Length - 2, 2).ToString()}");
-                        log.Clear();
+                        Steps.Add(new Step(Candidates, Board, $"Hidden Single in ({j}) Row: ({possibleX}, {possibleY})", new (sbyte, sbyte)[] { (possibleX, possibleY) }, StepCandidateLog));
+                        Board[possibleX, possibleY] = n;
+                        return true;
                     }
                 }
             }
-
-            
-            for (sbyte x = 0; x < 9; x++)
-            {
-                List<NakedSubset> subsets = new List<NakedSubset>();
-                for (sbyte y = 1; y < 9; y++)
-                {
-                    if (subsets.Count == 0)
-                        {
-                            if (Candidates[x, y].Count != 0)
-                            {
-                                subsets.Add(new NakedSubset(Candidates[x, y], 1));
-                            }
-                            continue;
-                        }
-                        if (Candidates[x, y].Count == 0)
-                        {
-                            continue;
-                        }
-                        for (int index = 0; index < subsets.Count; index++)
-                        {
-                            if (Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
-                            {
-                                subsets[index].Count++;
-                                goto Continue;
-                            }
-                        }
-                        subsets.Add(new NakedSubset(Candidates[x, y], 1));
-                        Continue:
-                        continue;
-                }
-                for (int index = 0; index < subsets.Count; index++)
-                {
-                    if (subsets[index].Count != subsets[index].Candidates.Count)
-                    {
-                        continue;
-                    }
-                    for (sbyte y = 0; y < 9; y++)
-                    {
-                        if (!Enumerable.SequenceEqual(Candidates[x, y], subsets[index].Candidates))
-                        {
-                            foreach (sbyte candidate in subsets[index].Candidates)
-                            {
-                                if (Candidates[x, y].Contains(candidate))
-                                {
-                                    log.Append($"{candidate} - ({x}, {y}), ");
-                                    Candidates[x, y].Remove(candidate);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (log.Length != 0)
-                {
-                    candidateLog.Add($"Naked subset(s) in row: {x} - {log.Remove(log.Length - 2, 2).ToString()}");
-                    log.Clear();
-                }
-            }
-
-
-            //beginner
-            //hidden singles
-            //naked singles
-            for (sbyte x = 0; x < 9; x++)
-            {
-                for (sbyte y = 0; y < 9; y++)
-                {
-                    if (Candidates[x, y].Count == 1) //naked single
-                    {
-                        Steps.Add(new Step(Candidates, Board, $"Naked single: {Candidates[x, y][0]}", new (sbyte, sbyte)[] { (x, y) }, candidateLog));
-                        Board[x, y] = Candidates[x, y][0];
-                        goto refresh;
-                    }
-                    (sbyte brx, sbyte bry, sbyte tlx, sbyte tly) box = Utilities.GetBox(x, y);
-                    foreach (sbyte number in Candidates[x, y]) //hidden single in box
-                    {
-                        foreach ((sbyte x, sbyte y) square in Utilities.IterateBoxIgnore(box.brx, box.bry, box.tlx, box.tly, x, y))
-                        {
-                            if (Candidates[square.x, square.y].Contains(number))
-                            {
-                                goto checkRow;
-                            }
-                        }
-                        Steps.Add(new Step(Candidates, Board, $"Hidden single in box: {number}", new (sbyte, sbyte)[] { (x, y) }, candidateLog));
-                        Board[x, y] = number;
-                        goto refresh;
-                        checkRow:
-                        for (sbyte horiz = 0; horiz < 9; horiz++)
-                        {
-                            if (Candidates[x, horiz].Contains(number) && y != horiz)
-                            {
-                                goto checkColumn;
-                            }
-                        }
-                        Steps.Add(new Step(Candidates, Board, $"Hidden single in row: {number}", new (sbyte, sbyte)[] { (x, y) }, candidateLog));
-                        Board[x, y] = number;
-                        goto refresh;
-                        checkColumn:
-                        for (sbyte vert = 0; vert < 9; vert++)
-                        {
-                            if (Candidates[vert, y].Contains(number) && x != vert)
-                            {
-                                goto notHidden;
-                            }
-                        }
-                        Steps.Add(new Step(Candidates, Board, $"Hidden single in column: {number}", new (sbyte, sbyte)[] { (x, y) }, candidateLog));
-                        Board[x, y] = number;
-                        goto refresh;
-                        notHidden:
-                        continue;
-                    }
-                }
-            }
+            return false;
         }
     }
 }

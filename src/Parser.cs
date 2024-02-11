@@ -4,7 +4,7 @@ namespace Psud
     {
         public static Sudoku PSN(string psn)
         {
-            Sudoku result = new Sudoku(new sbyte[9, 9]);
+            Sudoku result = new(new sbyte[9, 9]);
             string[] rows = psn.Split(',');
             for (sbyte y = 0; y < 9; y++)
             {
