@@ -38,6 +38,7 @@ namespace Psud
         {
             StepCandidateLog.Clear(); //starting new step
             Candidates = Calculate.Candidates(Board);
+            
             bool naked = NakedSingles();
             bool hidden = HiddenSingles();
             if (naked || hidden) //solve again if naked single is found
@@ -195,6 +196,56 @@ namespace Psud
                 }
             }
             return false;
+        }
+
+        private void Claiming()
+        {
+            for (sbyte n = 1; n < 10; n++) //iterate over numbers 1-9
+            {
+                for (sbyte i = 0; i < 3; i++) //check by box
+                {
+                    for (sbyte j = 0; j < 3; j++)
+                    {
+                        bool alreadyNumber = false;
+                        foreach ((sbyte x, sbyte y) in Utilities.IterateBox(i, j))
+                        {
+                            if (Board[x, y] == n)
+                            {
+                                alreadyNumber = true;
+                                break;
+                            }
+                        }
+                        if (alreadyNumber) //if number is already in box, hidden single is impossible
+                        {
+                            break;
+                        }
+                        bool found = false, hidden = true;
+                        sbyte possibleX = 0, possibleY = 0;
+                        foreach ((sbyte x, sbyte y) in Utilities.IterateBox(i, j)) //get squares in box
+                        {
+                            if (Candidates[x, y].Contains(n))
+                            {
+                                if (found)
+                                {
+                                    hidden = false;
+                                    break; //go to next box, same number twice
+                                }
+                                else //first time number is found, could be hidden
+                                {
+                                    found = true;
+                                    possibleX = x;
+                                    possibleY = y;
+                                }
+                            }
+                        }
+                        if (hidden)
+                        {
+                            Steps.Add(new Step(Candidates, Board, $"Hidden Single in ({i}, {j}) Box: ({possibleX}, {possibleY})", new (sbyte, sbyte)[] { (possibleX, possibleY) }, StepCandidateLog));
+                            Board[possibleX, possibleY] = n;
+                        }
+                    }
+                }
+            }
         }
     }
 }
